@@ -113,6 +113,18 @@ li button.row.on{background:color-mix(in srgb, var(--phase) 14%, transparent)}
 .addrow{display:flex;flex-direction:column;gap:6px;border-top:1px dashed var(--line);padding-top:12px}
 .addrow select{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);max-width:100%}
 .block.off{opacity:.6}
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.day{flex:1 0 auto;min-width:3.6rem;max-width:11rem;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.15}
+.day span{font-family:var(--display);font-weight:800;font-size:1.15rem;text-transform:uppercase;letter-spacing:.04em}
+.day small{font-size:.7rem;color:var(--muted);font-weight:500;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day.today small{color:var(--r);font-weight:700}
+.day[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.day[aria-pressed="true"] small{color:inherit;opacity:.8}
+.tin{font:inherit;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;max-width:100%}
+.field.grow{flex:1 1 16rem}
+.field.grow .tin{width:100%}
+.break{flex-basis:100%;height:0}
+.bname{font-family:var(--display);font-weight:800;font-size:1.2rem;text-transform:uppercase;flex:1 1 auto;width:6rem;padding:4px 8px}
 textarea#fallback{width:100%;min-height:200px;font:inherit;font-size:.85rem;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px}
 @media (prefers-reduced-motion: reduce){ .stepfill,.fill{transition:none} }
 </style>
@@ -120,14 +132,16 @@ textarea#fallback{width:100%;min-height:200px;font:inherit;font-size:.85rem;bord
 <body>
 <div class="wrap">
   <header>
-    <div class="brand"><h1>Sudapp</h1><p class="sub">Rutina de fuerza guiada · cuerpo completo</p></div>
+    <div class="brand"><h1>Sudapp</h1><p class="sub" id="subtitle">Rutina de fuerza guiada</p></div>
     <div class="meta">
       <span class="tag" id="totalTag">45 min</span>
-      <span class="tag" id="fmtTag">40 s trabajo · 20 s pausa</span>
-      <span class="tag">Sin estiramiento</span>
+      <span class="tag" id="fmtTag">40 s trabajo · 10 s pausa</span>
+      <span class="tag" id="fmtTag2">20 s entre vueltas · 60 s entre bloques</span>
       <span class="tag">Mancuernas + colchoneta</span>
     </div>
   </header>
+
+  <nav class="days" id="days" aria-label="Rutina de cada día"></nav>
 
   <section class="stage" id="stage" aria-label="Reproductor de la rutina">
     <div class="viz">
@@ -170,8 +184,12 @@ textarea#fallback{width:100%;min-height:200px;font:inherit;font-size:.85rem;bord
       </div>
     </div>
     <div class="editbar" id="editbar" hidden>
+      <div class="field grow"><label for="f_title">Nombre del día</label><input class="tin" id="f_title" maxlength="60"></div>
+      <div class="field"><label for="f_copy">Copiar rutina de</label><select class="tin" id="f_copy"></select></div>
+      <div class="break"></div>
       <div class="field"><label for="f_work">Trabajo</label><div class="stepper"><button class="ib" data-step="work" data-d="-1" aria-label="Menos trabajo">−</button><input id="f_work" type="number" inputmode="numeric" min="10" max="180" step="5"><span class="unit">s</span><button class="ib" data-step="work" data-d="1" aria-label="Más trabajo">+</button></div></div>
-      <div class="field"><label for="f_rest">Descanso</label><div class="stepper"><button class="ib" data-step="rest" data-d="-1" aria-label="Menos descanso">−</button><input id="f_rest" type="number" inputmode="numeric" min="0" max="120" step="5"><span class="unit">s</span><button class="ib" data-step="rest" data-d="1" aria-label="Más descanso">+</button></div></div>
+      <div class="field"><label for="f_rest">Entre ejercicios</label><div class="stepper"><button class="ib" data-step="rest" data-d="-1" aria-label="Menos descanso entre ejercicios">−</button><input id="f_rest" type="number" inputmode="numeric" min="0" max="120" step="5"><span class="unit">s</span><button class="ib" data-step="rest" data-d="1" aria-label="Más descanso entre ejercicios">+</button></div></div>
+      <div class="field"><label for="f_round">Entre vueltas</label><div class="stepper"><button class="ib" data-step="round" data-d="-1" aria-label="Menos descanso entre vueltas">−</button><input id="f_round" type="number" inputmode="numeric" min="0" max="180" step="5"><span class="unit">s</span><button class="ib" data-step="round" data-d="1" aria-label="Más descanso entre vueltas">+</button></div></div>
       <div class="field"><label for="f_change">Entre bloques</label><div class="stepper"><button class="ib" data-step="change" data-d="-1" aria-label="Menos pausa entre bloques">−</button><input id="f_change" type="number" inputmode="numeric" min="0" max="180" step="5"><span class="unit">s</span><button class="ib" data-step="change" data-d="1" aria-label="Más pausa entre bloques">+</button></div></div>
       <div class="field"><label for="f_prep">Preparación</label><div class="stepper"><button class="ib" data-step="prep" data-d="-1" aria-label="Menos preparación">−</button><input id="f_prep" type="number" inputmode="numeric" min="3" max="60" step="1"><span class="unit">s</span><button class="ib" data-step="prep" data-d="1" aria-label="Más preparación">+</button></div></div>
       <button class="ghost" id="reset">Volver a la rutina original</button>
@@ -244,26 +262,59 @@ EX.puente1={name:"Puente a una pierna",cue:"Como el puente de glúteo pero con u
 EX.superman={name:"Superman",cue:"Boca abajo con brazos estirados al frente. Despegá brazos, pecho y piernas del piso a la vez y bajá controlado.",view:"side",period:1.2,
   f:[P({t:90,n:90,lu:90,ll:90,ru:90,rl:90,lt:-90,ls:-90,rt:-90,rs:-90}),P({t:78,n:75,lu:105,ll:105,ru:105,rl:105,lt:-102,ls:-102,rt:-102,rs:-102})]};
 
-const DEFAULT={work:40,rest:20,change:50,prep:10,blocks:[
+// aductores (interior del muslo)
+EX.estlat={name:"Estocada lateral",cue:"Pies bien abiertos. Llevá la cadera hacia un costado flexionando esa rodilla y dejá la otra pierna estirada: vas a sentir el interior del muslo. Volvé al centro y alterná.",view:"front",period:.9,
+  f:[P({lt:-14,ls:-14,rt:14,rs:14,lu:-20,ll:20,ru:20,rl:-20}),P({t:10,lt:-41,ls:-41,rt:60,rs:-5,lu:-25,ll:30,ru:25,rl:-30}),
+     P({lt:-14,ls:-14,rt:14,rs:14,lu:-20,ll:20,ru:20,rl:-20}),P({t:-10,lt:-60,ls:5,rt:41,rs:41,lu:-25,ll:30,ru:25,rl:-30})]};
+EX.sumopul={name:"Pulsos en sumo",cue:"Abajo en sentadilla sumo, puntas hacia afuera y mancuerna al centro. Hacé rebotes cortos sin subir del todo, empujando las rodillas hacia afuera.",view:"front",period:.4,db:true,
+  f:[P({lt:-70,ls:-15,rt:70,rs:15,lu:15,ll:12,ru:-15,rl:-12}),P({lt:-58,ls:-15,rt:58,rs:15,lu:15,ll:12,ru:-15,rl:-12})]};
+EX.aductor={name:"Aductor acostado de costado",cue:"De costado, apoyado en el codo. Cruzá la pierna de arriba y apoyá el pie adelante. Subí y bajá la pierna de abajo estirada, sin balancearte. Mitad del tiempo de cada lado.",view:"side",period:1,
+  f:[P({t:-60,n:-60,lu:0,ll:-90,ru:100,rl:100,lt:120,ls:60,rt:90,rs:90}),P({t:-60,n:-60,lu:0,ll:-90,ru:100,rl:100,lt:120,ls:60,rt:110,rs:110})]};
+EX.puenteAd={name:"Puente apretando almohadón",cue:"Como el puente de glúteo, con un almohadón o pelota entre las rodillas. Apretalo fuerte mientras subís la cadera.",view:"side",period:1.1,f:EX.puente.f};
+// tríceps
+EX.fondos={name:"Fondos en silla",cue:"Manos en el borde de una silla firme, detrás tuyo, y piernas adelante. Bajá doblando los codos hacia atrás y empujá hasta estirar.",view:"side",period:1.1,prop:"chair",
+  f:[P({t:-10,n:-5,lu:-15,ll:-15,ru:-15,rl:-15,lt:90,ls:0,rt:90,rs:0}),P({t:-5,n:0,lu:-100,ll:20,ru:-100,rl:20,lt:120,ls:45,rt:120,rs:45})]};
+EX.patadatri={name:"Patada de tríceps",cue:"Torso inclinado y codos pegados al cuerpo. Estirá el brazo hacia atrás hasta dejarlo recto y volvé lento, sin mover el codo.",view:"side",period:1,db:true,
+  f:[P({t:55,n:50,lt:15,ls:-10,rt:15,rs:-10,lu:-65,ll:0,ru:-65,rl:0}),P({t:55,n:50,lt:15,ls:-10,rt:15,rs:-10,lu:-65,ll:-70,ru:-65,rl:-70})]};
+EX.frances={name:"Press francés acostado",cue:"Boca arriba, mancuernas arriba con los brazos estirados. Doblá solo los codos llevando las pesas hacia la frente y volvé a estirar.",view:"side",period:1.2,db:true,
+  f:[P({...sup,lt:125,ls:45,rt:125,rs:45,lu:-170,ll:-175,ru:-170,rl:-175}),P({...sup,lt:125,ls:45,rt:125,rs:45,lu:-165,ll:-60,ru:-165,rl:-60})]};
+EX.diamante={name:"Flexiones diamante",cue:"Manos juntas debajo del pecho formando un rombo. Bajá con los codos pegados al cuerpo. Si cuesta, apoyá las rodillas.",view:"side",period:1,f:EX.flex.f};
+
+const DEFAULT={title:"Cuerpo completo",work:40,rest:10,round:20,change:60,prep:10,blocks:[
  {name:"Activación",color:"--y",rounds:1,ex:["jacks","skip","aire","escal"]},
  {name:"Piernas y glúteos",color:"--r",rounds:3,ex:["goblet","estocada","rumano","puente","sumo","patada"]},
  {name:"Tren superior",color:"--b",rounds:2,ex:["flex","remo","press","curl","triceps","lateral"]},
  {name:"Serie de abdominales",color:"--g",rounds:2,ex:["crunch","piernas","plancha","bici","vups"]}
 ]};
+const LUNES={title:"Aductores · tríceps · abdominales",work:40,rest:10,round:20,change:60,prep:10,blocks:[
+ {name:"Activación",color:"--y",rounds:1,ex:["jacks","skip","aire","estlat"]},
+ {name:"Piernas · aductores",color:"--r",rounds:3,ex:["sumo","estlat","aductor","sumopul","puenteAd"]},
+ {name:"Tríceps",color:"--b",rounds:3,ex:["triceps","fondos","patadatri","frances","diamante"]},
+ {name:"Abdominales variados",color:"--g",rounds:2,ex:["crunch","bici","piernas","plancha","vups","escal"]}
+]};
 const clone=o=>JSON.parse(JSON.stringify(o));
-const LIM={work:[10,180],rest:[0,120],change:[0,180],prep:[3,60]};
-function loadCfg(){
-  try{ const c=JSON.parse(localStorage.getItem("r45cfg")||"null");
-    if(c&&Array.isArray(c.blocks)&&c.blocks.length===DEFAULT.blocks.length){
-      const out=clone(DEFAULT);
-      for(const k in LIM){ const v=+c[k]; if(Number.isFinite(v)) out[k]=Math.min(LIM[k][1],Math.max(LIM[k][0],Math.round(v))); }
-      c.blocks.forEach((b,i)=>{ out.blocks[i].rounds=Math.min(10,Math.max(0,+b.rounds|0)); out.blocks[i].ex=(b.ex||[]).filter(k=>EX[k]); });
-      return out; }
-  }catch(e){}
-  return clone(DEFAULT);
+const LIM={work:[10,180],rest:[0,120],round:[0,180],change:[0,180],prep:[3,60]};
+
+// días
+const DAYS=[["lun","Lun","Lunes"],["mar","Mar","Martes"],["mie","Mié","Miércoles"],["jue","Jue","Jueves"],["vie","Vie","Viernes"],["sab","Sáb","Sábado"],["dom","Dom","Domingo"]];
+const TODAY=DAYS[(new Date().getDay()+6)%7][0];
+const PRESET=d=>clone(d==="lun"?LUNES:DEFAULT);
+const SKEY="sudapp.dias.v1";
+let STORE={};
+try{ const s=JSON.parse(localStorage.getItem(SKEY)||"null"); if(s&&typeof s==="object") STORE=s; }catch(e){}
+function sanitize(c,d){
+  const out=PRESET(d);
+  if(!c||!Array.isArray(c.blocks)||c.blocks.length!==out.blocks.length) return out;
+  if(typeof c.title==="string"&&c.title.trim()) out.title=c.title.trim().slice(0,60);
+  for(const k in LIM){ const v=+c[k]; if(Number.isFinite(v)) out[k]=Math.min(LIM[k][1],Math.max(LIM[k][0],Math.round(v))); }
+  c.blocks.forEach((b,i)=>{ out.blocks[i].rounds=Math.min(10,Math.max(0,+b.rounds|0)); out.blocks[i].ex=(b.ex||[]).filter(k=>EX[k]);
+    if(typeof b.name==="string"&&b.name.trim()) out.blocks[i].name=b.name.trim().slice(0,40); });
+  return out;
 }
-function saveCfg(){ try{ localStorage.setItem("r45cfg",JSON.stringify(CFG)); }catch(e){} }
-let CFG=loadCfg();
+const getDay=d=>sanitize(STORE[d],d);
+let DAY=TODAY;
+let CFG=getDay(DAY);
+function saveCfg(){ STORE[DAY]=CFG; try{ localStorage.setItem(SKEY,JSON.stringify(STORE)); }catch(e){} }
 
 const $=id=>document.getElementById(id);
 const fmt=s=>{s=Math.max(0,Math.ceil(s));const m=Math.floor(s/60),x=s%60;return m+":"+String(x).padStart(2,"0");};
@@ -287,8 +338,10 @@ function build(){
           let nb=bi,nr=r,ni=i+1;
           if(ni>=bl.ex.length){ni=0;nr=r+1;}
           if(lastInBlock){nb=act[ai+1];nr=1;ni=0;}
-          const d=lastInBlock?CFG.change:CFG.rest;
-          if(d>0) steps.push({type:lastInBlock?"change":"rest",dur:d,ex:CFG.blocks[nb].ex[ni],b:nb,r:nr,i:ni});
+          const lastInRound=i===bl.ex.length-1;
+          const type=lastInBlock?"change":lastInRound?"round":"rest";
+          const d=CFG[type];
+          if(d>0) steps.push({type,dur:d,ex:CFG.blocks[nb].ex[ni],b:nb,r:nr,i:ni});
         });
       }
     });
@@ -296,6 +349,8 @@ function build(){
   let acc=0; steps.forEach(s=>{s.start=acc;acc+=s.dur;}); TOTAL=acc;
   $("totalTag").textContent=fmt(TOTAL)+" min";
   $("fmtTag").textContent=`${CFG.work} s trabajo · ${CFG.rest} s pausa`;
+  $("fmtTag2").textContent=`${CFG.round} s entre vueltas · ${CFG.change} s entre bloques`;
+  renderDays();
   // barra por bloques
   const track=$("track"); track.querySelectorAll(".seg").forEach(n=>n.remove());
   act.forEach((bi,ai)=>{
@@ -316,13 +371,19 @@ function renderList(){
   $("edit").textContent=editing?"Listo":"Editar rutina";
   $("edit").setAttribute("aria-pressed",String(editing));
   $("listNote").textContent=editing?"Cambiá tiempos y vueltas, ordená, quitá o sumá ejercicios. Los cambios se guardan en este navegador.":"Tocá un ejercicio para saltar a él. Si no tenés mancuernas, usá botellas de agua o una mochila con peso.";
-  ["work","rest","change","prep"].forEach(k=>{ const i=$("f_"+k); if(document.activeElement!==i) i.value=CFG[k]; });
+  ["work","rest","round","change","prep"].forEach(k=>{ const i=$("f_"+k); if(document.activeElement!==i) i.value=CFG[k]; });
+  if(document.activeElement!==$("f_title")) $("f_title").value=CFG.title;
+  $("f_copy").innerHTML=`<option value="">Elegí un día…</option>`+DAYS.filter(d=>d[0]!==DAY).map(d=>`<option value="${d[0]}">${d[2]} · ${esc(getDay(d[0]).title)}</option>`).join("");
   CFG.blocks.forEach((bl,bi)=>{
     const mins=Math.round(bl.ex.length*bl.rounds*(CFG.work+CFG.rest)/60);
     const sec=document.createElement("article"); sec.className="block"+(bl.rounds&&bl.ex.length?"":" off"); sec.style.setProperty("--phase",`var(${bl.color})`);
     const head=document.createElement("div"); head.className="bhead";
     head.innerHTML=`<span class="plate"></span><h3>${esc(bl.name)}</h3>`;
     if(editing){
+      const h=head.querySelector("h3"); const inp=document.createElement("input");
+      inp.className="tin bname"; inp.value=bl.name; inp.maxLength=40; inp.setAttribute("aria-label","Nombre del bloque");
+      inp.addEventListener("change",()=>{ bl.name=inp.value.trim()||bl.name; saveCfg(); build(); });
+      h.replaceWith(inp);
       const st=document.createElement("div"); st.className="stepper"; st.setAttribute("role","group"); st.setAttribute("aria-label","Vueltas de "+bl.name);
       st.innerHTML=`<button class="ib" data-d="-1" aria-label="Una vuelta menos">−</button><span><b>${bl.rounds}</b> ${bl.rounds===1?"vuelta":"vueltas"}</span><button class="ib" data-d="1" aria-label="Una vuelta más">+</button>`;
       st.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{ bl.rounds=Math.min(10,Math.max(0,bl.rounds+(+b.dataset.d))); saveCfg(); build(); }));
@@ -365,7 +426,21 @@ function renderList(){
   });
 }
 $("edit").addEventListener("click",()=>{ editing=!editing; renderList(); });
-["work","rest","change","prep"].forEach(k=>{
+$("f_title").addEventListener("change",()=>{ const v=$("f_title").value.trim(); if(v){ CFG.title=v.slice(0,60); saveCfg(); build(); } });
+$("f_copy").addEventListener("change",ev=>{ const d=ev.target.value; if(!d) return; CFG=getDay(d); saveCfg(); build(); });
+function renderDays(){
+  const box=$("days"); box.innerHTML="";
+  DAYS.forEach(([k,short,full])=>{
+    const b=document.createElement("button"); b.className="day"+(k===TODAY?" today":""); b.setAttribute("aria-pressed",String(k===DAY));
+    b.setAttribute("aria-label",full+(k===TODAY?" (hoy)":"")+": "+getDay(k).title);
+    b.innerHTML=`<span>${short}</span><small>${k===TODAY?"Hoy":esc(getDay(k).title)}</small>`;
+    b.addEventListener("click",()=>{ if(k===DAY) return; DAY=k; CFG=getDay(k); build(); });
+    box.appendChild(b);
+  });
+  const full=DAYS.find(d=>d[0]===DAY)[2];
+  $("subtitle").textContent=`${full} · ${CFG.title}`;
+}
+["work","rest","round","change","prep"].forEach(k=>{
   const i=$("f_"+k);
   const apply=()=>{ const v=Math.round(+i.value); if(!Number.isFinite(v)) return; CFG[k]=Math.min(LIM[k][1],Math.max(LIM[k][0],v)); saveCfg(); build(); };
   i.addEventListener("change",apply);
@@ -378,11 +453,12 @@ $("reset").addEventListener("click",()=>{
   const b=$("reset");
   if(b.dataset.armed!=="1"){ b.dataset.armed="1"; b.textContent="Tocá de nuevo para confirmar"; setTimeout(()=>{b.dataset.armed="";b.textContent="Volver a la rutina original";},3000); return; }
   b.dataset.armed=""; b.textContent="Volver a la rutina original";
-  CFG=clone(DEFAULT); saveCfg(); build();
+  CFG=PRESET(DAY); saveCfg(); build();
 });
 
 function routineText(){
-  let t=`SUDAPP · RUTINA DE FUERZA — CUERPO COMPLETO (sin estiramiento)\nDuración total: ${fmt(TOTAL)} min\nFormato: ${CFG.work} s de trabajo / ${CFG.rest} s de descanso · ${CFG.change} s entre bloques\nMaterial: mancuernas (o botellas con agua) y colchoneta\n`;
+  const full=DAYS.find(d=>d[0]===DAY)[2];
+  let t=`SUDAPP · ${full.toUpperCase()} — ${CFG.title.toUpperCase()}\nDuración total: ${fmt(TOTAL)} min\nFormato: ${CFG.work} s de trabajo · ${CFG.rest} s entre ejercicios · ${CFG.round} s entre vueltas · ${CFG.change} s entre bloques\nMaterial: mancuernas (o botellas con agua), colchoneta y una silla firme\n`;
   let n=0;
   CFG.blocks.forEach(bl=>{ if(!bl.ex.length||!bl.rounds) return; n++;
     t+=`\n${n}) ${bl.name.toUpperCase()} — ${bl.rounds} ${bl.rounds>1?"vueltas":"vuelta"}\n`;
@@ -500,6 +576,7 @@ function announce(){
     playSnd("tickA");
     later(()=>say(pre+e.name),350);
   } else if(s.type==="rest"){ later(()=>say("Descanso. Sigue "+e.name),1000); }
+  else if(s.type==="round"){ later(()=>say("Fin de la vuelta. Descansá. Sigue "+e.name),1000); }
   else if(s.type==="change"){ later(()=>say("Cambio de bloque. Sigue "+bl.name+", con "+e.name),1000); }
   else say("Preparate. Arrancamos con "+e.name);
 }
@@ -543,7 +620,7 @@ function render(){
   $("stage").style.setProperty("--phase",`var(${bl.color})`);
   $("phase").style.color = phaseColor;
   $("stepfill").style.background = phaseColor;
-  const labels={work:"Trabajo",rest:"Descanso",change:"Cambio de bloque",prep:"Preparate"};
+  const labels={work:"Trabajo",rest:"Descanso",round:"Fin de vuelta · descanso",change:"Cambio de bloque",prep:"Preparate"};
   $("phase").textContent = done? "Rutina completa" : (!running && el===0 && idx===0 ? "Listo para empezar" : (!running? "En pausa · ":"")+labels[s.type]);
   $("clock").textContent = done? "00:00" : fmt2(s.dur-el);
   $("stepfill").style.width = (done?100:Math.min(100,el/s.dur*100))+"%";
@@ -609,6 +686,11 @@ function draw(time){
   // colchoneta
   ctx.fillStyle=line; const mw=Math.min(W*.86,230*sc);
   ctx.beginPath(); ctx.roundRect ? ctx.roundRect(cx-mw/2,gy,mw,7*sc,3*sc) : ctx.rect(cx-mw/2,gy,mw,7*sc); ctx.fill();
+  if(ex.prop==="chair"){ // silla debajo de las manos
+    const h=sk.ra[2], top=Y(h)+4*sc, x1=X(h)-30*sc, x2=X(h)+6*sc;
+    ctx.save(); ctx.fillStyle=line; ctx.fillRect(x1,top,x2-x1,5*sc);
+    ctx.fillRect(x1+2*sc,top,4*sc,gy-top); ctx.fillRect(x2-6*sc,top,4*sc,gy-top);
+    ctx.fillRect(x1+2*sc,top-30*sc,4*sc,30*sc); ctx.restore(); }
   ctx.globalAlpha = rest? .45 : 1;
   ctx.lineCap="round"; ctx.lineJoin="round";
   const seg=(arr,alpha,w)=>{ctx.save();ctx.globalAlpha*=alpha;ctx.strokeStyle=ink;ctx.lineWidth=w*sc;ctx.beginPath();ctx.moveTo(X(arr[0]),Y(arr[0]));for(let i=1;i<arr.length;i++)ctx.lineTo(X(arr[i]),Y(arr[i]));ctx.stroke();ctx.restore();};
