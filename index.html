@@ -279,6 +279,16 @@ EX.patadatri={name:"Patada de tríceps",cue:"Torso inclinado y codos pegados al 
 EX.frances={name:"Press francés acostado",cue:"Boca arriba, mancuernas arriba con los brazos estirados. Doblá solo los codos llevando las pesas hacia la frente y volvé a estirar.",view:"side",period:1.2,db:true,
   f:[P({...sup,lt:125,ls:45,rt:125,rs:45,lu:-170,ll:-175,ru:-170,rl:-175}),P({...sup,lt:125,ls:45,rt:125,rs:45,lu:-165,ll:-60,ru:-165,rl:-60})]};
 EX.diamante={name:"Flexiones diamante",cue:"Manos juntas debajo del pecho formando un rombo. Bajá con los codos pegados al cuerpo. Si cuesta, apoyá las rodillas.",view:"side",period:1,f:EX.flex.f};
+// aductores y abdominales (sumados el 27/10)
+{const W=P({lt:-4,ls:-4,rt:4,rs:4,lu:-25,ll:25,ru:25,rl:-25});
+EX.slidecruz={name:"Slide lunge cruzado",cue:"Pie de atrás sobre una toalla o disco en piso liso. Deslizalo en diagonal por detrás de la otra pierna mientras bajás, como una reverencia, y volvé apretando el interior del muslo. Mitad del tiempo con cada pierna.",view:"front",period:1,
+  f:[W,P({t:-6,lt:-10,ls:12,rt:-42,rs:-24,lu:-25,ll:25,ru:25,rl:-25}),W,P({t:6,rt:10,rs:-12,lt:42,ls:24,lu:-25,ll:25,ru:25,rl:-25})]};}
+EX.aperturas={name:"Aperturas de aductores boca arriba",cue:"Boca arriba con las piernas estiradas hacia el techo y la zona lumbar pegada al piso. Abrilas en V lo más que puedas y cerralas apretando el interior de los muslos.",view:"side",period:1.3,
+  f:[P({...sup,lt:178,ls:178,rt:182,rs:182,lu:92,ll:92,ru:92,rl:92}),P({...sup,lt:150,ls:150,rt:210,rs:210,lu:92,ll:92,ru:92,rl:92})]};
+EX.plie={name:"Sentadilla profunda plié",cue:"Pies muy abiertos y puntas hacia afuera, torso bien derecho. Bajá profundo llevando las rodillas hacia afuera, en línea con los pies, y subí apretando glúteos y aductores.",view:"front",period:1.3,db:true,
+  f:[P({lt:-24,ls:-24,rt:24,rs:24,lu:12,ll:12,ru:-12,rl:-12}),P({lt:-84,ls:-12,rt:84,rs:12,lu:16,ll:12,ru:-16,rl:-12})]};
+EX.flutter={name:"Flutter kicks",cue:"Boca arriba, manos debajo de la cola y piernas estiradas apenas despegadas del piso. Subí y bajá las piernas alternadas en movimientos cortos y rápidos, sin despegar la zona lumbar.",view:"side",period:.28,
+  f:[P({t:-85,n:-75,lt:96,ls:96,rt:128,rs:128,lu:92,ll:92,ru:92,rl:92}),P({t:-85,n:-75,lt:128,ls:128,rt:96,rs:96,lu:92,ll:92,ru:92,rl:92})]};
 
 const DEFAULT={title:"Cuerpo completo",work:40,rest:10,round:20,change:60,prep:10,blocks:[
  {name:"Activación",color:"--y",rounds:1,ex:["jacks","skip","aire","escal"]},
@@ -288,10 +298,12 @@ const DEFAULT={title:"Cuerpo completo",work:40,rest:10,round:20,change:60,prep:1
 ]};
 const LUNES={title:"Aductores · tríceps · abdominales",work:40,rest:10,round:20,change:60,prep:10,blocks:[
  {name:"Activación",color:"--y",rounds:1,ex:["jacks","skip","aire","estlat"]},
- {name:"Piernas · aductores",color:"--r",rounds:3,ex:["sumo","estlat","aductor","sumopul","puenteAd"]},
+ {name:"Piernas · aductores",color:"--r",rounds:3,ex:["sumo","estlat","slidecruz","aductor","aperturas","plie","sumopul","puenteAd"]},
  {name:"Tríceps",color:"--b",rounds:3,ex:["triceps","fondos","patadatri","frances","diamante"]},
- {name:"Abdominales variados",color:"--g",rounds:2,ex:["crunch","bici","piernas","plancha","vups","escal"]}
+ {name:"Abdominales variados",color:"--g",rounds:2,ex:["crunch","bici","flutter","piernas","plancha","vups","escal"]}
 ]};
+// suma los ejercicios nuevos al lunes aunque ya lo hayas editado
+const MIGR=[[1,"slidecruz","estlat"],[1,"aperturas","aductor"],[1,"plie","aperturas"],[3,"flutter","bici"]];
 const clone=o=>JSON.parse(JSON.stringify(o));
 const LIM={work:[10,180],rest:[0,120],round:[0,180],change:[0,180],prep:[3,60]};
 
@@ -302,6 +314,12 @@ const PRESET=d=>clone(d==="lun"?LUNES:DEFAULT);
 const SKEY="sudapp.dias.v1";
 let STORE={};
 try{ const s=JSON.parse(localStorage.getItem(SKEY)||"null"); if(s&&typeof s==="object") STORE=s; }catch(e){}
+if((STORE._v|0)<2){
+  const l=STORE.lun;
+  if(l&&Array.isArray(l.blocks)) MIGR.forEach(([bi,k,after])=>{ const b=l.blocks[bi]; if(!b||!Array.isArray(b.ex)||b.ex.includes(k)) return;
+    const j=b.ex.indexOf(after); b.ex.splice(j<0?b.ex.length:j+1,0,k); });
+  STORE._v=2; try{ localStorage.setItem(SKEY,JSON.stringify(STORE)); }catch(e){}
+}
 function sanitize(c,d){
   const out=PRESET(d);
   if(!c||!Array.isArray(c.blocks)||c.blocks.length!==out.blocks.length) return out;
